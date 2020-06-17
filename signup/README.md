@@ -103,7 +103,6 @@ DATABASES = {
 
 
 ```
-https://fee.hzliyou.cn/admin/
 ```
 
 - 接口测试

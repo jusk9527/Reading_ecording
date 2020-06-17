@@ -3,7 +3,7 @@
 项目 | 项目介绍
 ---|---
 [-Design_pattern](./-Design_pattern) | 收集的设计模式
-[Brush_questions](./Brush_questions) | 进行数据结构的刷题
+[Brush_questions](./Brush_questions) | 进行数据结构的刷题,代码是[python](https://github.com/wangzheng0822/algo/tree/master/python)相关的
 [Crypto](./Crypto)| 加密解密的一些方法
 [DYPROXY](./DYPROXY)|sock5协议的分解
 [fastapi_demo](./fastapi_demo)|fastapi的尝试
