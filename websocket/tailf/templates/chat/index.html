@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="col-sm-8">
+  <select class="form-control" id="file">
+    <option value="">选择要监听的日志</option>
+    {% for k,v in logDict.items %}
+    <option value="{{ k }}">{{ v }}</option>
+    {% endfor %}
+  </select>
+</div>
+<div class="col-sm-2">
+  <input class="btn btn-success btn-block" type="button" onclick="connect()" value="开始监听"/><br/>
+</div>
+<div class="col-sm-2">
+  <input class="btn btn-warning btn-block" type="button" onclick="goclose()" value="终止监听"/><br/>
+</div>
+<div class="col-sm-12">
+  <textarea class="form-control" id="chat-log" disabled rows="20"></textarea>
+</div>
+{% endblock %}
