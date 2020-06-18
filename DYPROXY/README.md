@@ -8,6 +8,7 @@
 
 [![socks5协议实现VPN](https://upload-images.jianshu.io/upload_images/6661013-9ff842f2c8b9bb40.jpg "socks5协议实现VPN")](https://upload-images.jianshu.io/upload_images/6661013-9ff842f2c8b9bb40.jpg "socks5协议实现VPN")
 
+# [struct的用法](https://docs.python.org/zh-cn/3/library/struct.html)
 ## 0x00 SOCKS5
 
 > `SOCKS` 是一种网络传输协议，主要用于客户端与外网服务器之间通讯的中间传递。`SOCKS`

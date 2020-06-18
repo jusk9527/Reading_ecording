@@ -61,6 +61,8 @@ class SinglyLinkedList(object):
         """
         self.__head = None
 
+
+
     def find_by_value(self, value):
         """
         按照数据值在单向列表中查找
@@ -95,6 +97,9 @@ class SinglyLinkedList(object):
         node.next_node = self.__head
         self.__head = node
 
+        return node
+
+
     def insert_after(self, node, value):
         """
         在链表的某个指定Node节点之后插入一个存储value数据的Node节点
@@ -108,6 +113,8 @@ class SinglyLinkedList(object):
         new_node = Node(value)
         new_node.next_node = node.next_node
         node.next_node = new_node
+
+        return new_node
 
     def insert_before(self, node, value):
         """
@@ -190,7 +197,7 @@ class SinglyLinkedList(object):
         """
         删除链表中倒数第N个节点
         主要思路
-            设置快、慢两个指针，快指针先行、慢指针不动，当快指针跨了N步以后，快、慢指针同事往链表尾部移动
+            设置快、慢两个指针，快指针先行、慢指针不动，当快指针跨了N步以后，快、慢指针同时往链表尾部移动
             当快指针到达链表尾部的时候，慢指针所指向的就是链表的倒数第N个节点
         :param n: 需要删除的倒数第N个序数
         :return:
@@ -246,30 +253,34 @@ class SinglyLinkedList(object):
         :return:
         """
         pos = self.__head
-        if pos is Node:
+        if pos is None:
             print("当前链表还没有数据")
             return
 
+        list = []
         while pos.next_node is not None:
+            list.append(pos.data)
             print(str(pos.data) + "--->", end="")
             pos = pos.next_node
 
         print(str(pos.data))
+        list.append(pos.data)
+        return list
 
     def reversed_self(self):
         """
         翻转链表自身
         :return:
         """
-        if self.__head is None or self.__head.next is None:             # 如果链表为空，或者链表只为一个节点
+        if self.__head is None or self.__head.next_node is None:             # 如果链表为空，或者链表只为一个节点
             return
 
         pre = self.__head
-        node = self.__head.next
+        node = self.__head.next_node
         while node is not None:
             pre, node = self.__reversed_with_two_node(pre, node)
 
-        self.__head.next = None
+        self.__head.next_node = None
         self.__head = pre
 
 
@@ -285,6 +296,7 @@ class SinglyLinkedList(object):
         pre = node                  # 这样写有点啰嗦，但是能让人更能看明白
         node = tmp
         return pre, node
+
 
     def has_ring(self):
         """
@@ -307,6 +319,8 @@ class SinglyLinkedList(object):
                 return True
 
         return False
+
+
 
 
 

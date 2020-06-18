@@ -2,13 +2,13 @@
 # author: DYBOY
 # time: 2019-5-18 17:27:49
 # desc: 测试使用socks5代理访问
-
+# pip install PySocks
 import socket
 import socks
 import requests
 
 # 设置代理
-socks.set_default_proxy(socks.SOCKS5, "服务器IP", 2019)
+socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 2019)
 # 如果使用账号密码验证，那么使用下面这行连接方式
 # socks.set_default_proxy(socks.SOCKS5, "服务器IP", 2019,username='dyboy', password='123456')
 socket.socket = socks.socksocket
