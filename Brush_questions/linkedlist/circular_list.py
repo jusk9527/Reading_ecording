@@ -37,7 +37,7 @@ class CircularList():
         :return:Node
         """
         node = self.__head
-        while (node is not None) and (node.data != value):
+        while (node is not None) and (node.data != value) and (self.__head != node.next_node):
             node = node.next_node
         return node
 
@@ -50,7 +50,7 @@ class CircularList():
         """
         node = self.__head
         pos = 0
-        while (node is not None) and (pos != index):
+        while (node is not None) and (pos != index) and (self.__head != node.next_node):
             node = node.next_node
             pos += 1
         return node
@@ -62,9 +62,14 @@ class CircularList():
         :return:
         """
         node = Node(value)
+        last_node = self.find_last_node()
+
         node.next_node = self.__head
         self.__head = node
 
+        # 最后节点从新指向头节点
+
+        last_node.next_node = node
         return node
 
 
@@ -85,7 +90,26 @@ class CircularList():
         return new_node
 
     def insert_before(self, node, value):
-        pass
+        if (node is None) or (self.__head is None):         # 如果指定在一个空节点之前或者空链表之前插入数据节点，则什么都不做
+            return
+
+        if node == self.__head:                             # 如果是在链表头之前插入数据节点，则直接插入
+            self.insert_to_head(value)
+            return
+
+        new_node = Node(value)
+        pro = self.__head
+        not_found = False                                   # 如果在整个链表中都没有找到指定插入的Node节点，则该标记为True
+        while pro.next_node != node:                        # 寻找指定Node之前的一个Node
+            if pro.next_node is None:                       # 如果已经到了链表的最后一个节点，则表明该链表中没有找到指定插入的Node节点
+                not_found = True
+                break
+            else:
+                pro = pro.next_node
+
+        if not not_found:
+            pro.next_node = new_node
+            new_node.next_node = node
 
 
     def insert_last(self,value):
@@ -111,7 +135,7 @@ class CircularList():
             while node.next_node != self.__head:
                 node = node.next_node
 
-        return node.data
+        return node
 
 
     def length_by_node(self):
@@ -142,15 +166,19 @@ class CircularList():
             return
 
 
-        if node == self.__head:  # 如果指定删除的Node节点是链表的头节点
+        if node == self.__head:  # 如果指定删除的Node节点是链表的头节点，最后一个节点就要指向现在的头节点
+
+            last_node = self.find_last_node()
+
+
             self.__head = node.next_node
-            last_node = self.__head
+            last_node.next_node = self.__head
             return
 
         pro = self.__head
         not_found = False  # 如果在整个链表中都没有找到指定删除的Node节点，则该标记量设置为True
         while pro.next_node != node:
-            if pro.next_node is None:  # 如果已经到链表的最后一个节点，则表明该链表中没有找到指定删除的Node节点
+            if pro.next_node == self.__head:  # 如果已经到链表的最后一个节点，则表明该链表中没有找到指定删除的Node节点
                 not_found = True
                 break
             else:
