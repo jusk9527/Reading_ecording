@@ -179,19 +179,24 @@ class SinglyLinkedList(object):
         if self.__head.data == value:        # 如果链表的头Node节点就是指定删除的Node节点
             self.__head = self.__head.next_node
 
-        pro = self.__head
+        # 前一个节点
+        pre = self.__head
+
+        # 当前节点
         node = self.__head.next_node
+
+
         not_found = False
         while node.data != value:
             if node.next_node is None:      # 如果已经到链表的最后一个节点，则表明该链表中没有找到执行value值的Node节点
                 not_found = True
                 break
             else:
-                pro = node
+                pre = node
                 node = node.next_node
 
         if not_found is False:
-            pro.next_node = node.next_node
+            pre.next_node = node.next_node
 
     def delete_last_n_node(self,n):
         """

@@ -39,17 +39,6 @@ class DoubleLinkedList(object):
             cur = cur.next
         return count
 
-    def travel_by_node(self):
-        """
-        遍历链表
-        :return:
-        """
-        cur = self.__head
-        while cur is not None:
-            print(cur.elem, end=' ')
-            cur = cur.next
-
-        print()
 
     def add_head_by_node(self, elem):
         """
@@ -87,50 +76,59 @@ class DoubleLinkedList(object):
             cur.next = node
             node.pre = cur
 
+        return node
 
-    def insert_before(self, pos, elem):
+
+    def insert_before(self, node, value):
         """
-        向链表位置pos 处插入元素elem
+        在某个节点之前 处插入元素elem
         :param pos:
         :param elem:
         :return:
         """
+        if (node is None) or (self.__head is None):
+            return
+
         # 插入到头节点
-        if pos <= 0:
-            self.add_head_by_node(elem)
+        if node == self.__head:
+            self.add_head_by_node(value)
+            return
 
-        # 插入到最后
-        elif pos > (self.length_by_node() - 1):
-            self.append_last_by_node(elem)
+        new_node = Node(value)
 
-        else:
-            cur = self.__head
-            count = 0
-            while count < pos:
-                cur = cur.next
-                count +=1
+        # 前一个节点
+        pre = self.__head
 
+        # 当前节点
+        node = self.__head.next
+        not_fount = False
+        while pre.next != node:
+            if pre.next is None:
+                not_fount = True
+                break
+            else:
+                pre = node
+                node = node.next
 
-            # 退出循环时，cur即为pos位置
-            node = Node(elem)
+        if not not_fount:
+            pre.next = new_node
 
-            node.next = cur
-            cur.pre.next = node
-            cur.pre = node
+            new_node.pre = pre
 
+            new_node.next = node
 
-
-
-
-
-
-
-
+            node.pre = new_node.next
 
 
 
 
-    def remove_by_node(self,data):
+
+
+
+
+
+
+    def remove_by_node(self,value):
         """
         删除链表中第一个值为elem的节点
         :param self:
@@ -140,21 +138,35 @@ class DoubleLinkedList(object):
         if self.is_empty():
             return
 
-        cur = self.__head
-        while cur.next != self.__head:
-            if cur.data == data:
-                if cur == self.__head:          # 如果是头节点
-                    self.__head = cur.next      # 链表中只有一个节点
-                    if cur.next:
-                        cur.next.pre = None
+        if self.__head.data == value:        # 如果链表的头Node节点就是指定删除的Node节点
+            self.__head = self.__head.next
 
-                else:
-                    cur.pre.next = cur.next
-                    if cur.next:        # 如果不是尾节点
-                        cur.next.pre = cur.pre
+
+        # 前一个节点
+        pre = self.__head
+
+        # 当前节点
+        node = self.__head.next
+
+        not_found = False
+        while node.data != value:
+            if node.next is None:      # 如果已经到链表的最后一个节点，则表明该链表中没有找到执行value值的Node节点
+                not_found = True
                 break
             else:
-                cur = cur.next
+                pre = node
+                node = node.next
+
+        if not_found is False:
+            pre.next = node.next
+            node.next.pre = pre.next
+
+
+
+
+
+
+
 
     def search_by_node(self, elem):
         """

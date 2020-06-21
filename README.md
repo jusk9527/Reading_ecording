@@ -15,7 +15,7 @@
 [python3-cookbook](./python3-cookbook)|python3-cookbook书代码
 [signup](./signup)|微信开发的一些封装
 [simple_wsgi](./simple_wsgi)|wsgi的结构
-[TestCase_demo](./TestCase_demo)|Django 官方单元测试的一次尝试
+[TestCase_demo](./TestCase_demo)|Django 的一些冷技巧，非常实用
 [websocket](./websocket)|Django websocket与celery的结合
 
 
