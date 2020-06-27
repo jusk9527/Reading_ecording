@@ -1,130 +1,73 @@
-# DYPROXY
-一个基于socks5的简单代理服务器python3实现
+### 前言
+
+因为最近发现官方源码挺有趣的，所以引发了在弄一个项目时先分析源码的行为。当我在看 socketserver 源码的时候发现这个标准库确实很漂亮。
+
+那么我们可不可以用一下这个标准库实现下今天的主题呢？自己动手实现一个代理并实现混淆
 
 
-> 信息安全课程的一个作业，让我们实现一个基于Sock5协议的代理服务器，看完整个实验要求，这不就是让我写一个“`VPN`”嘛？
 
-之前的实验都是使用的 `python3`来实现，所以此次还是基于 `Python` 来实现这个简单的“VPN”吧。
+### 实验分析
 
-[![socks5协议实现VPN](https://upload-images.jianshu.io/upload_images/6661013-9ff842f2c8b9bb40.jpg "socks5协议实现VPN")](https://upload-images.jianshu.io/upload_images/6661013-9ff842f2c8b9bb40.jpg "socks5协议实现VPN")
+1. 我们先得看下有没有简单一点的协议实现**地址封装**
 
-# [struct的用法](https://docs.python.org/zh-cn/3/library/struct.html)
-## 0x00 SOCKS5
+查找资料发现可以使用sock5这个协议，首先通用性非常好。Firefox本身就自带socks这个client端，当然你也可以用其他插件也是可以的。我们只是介绍基础的代理或者说穿透原理，所以基本能简单就都用最简单地方法去实现
 
-> `SOCKS` 是一种网络传输协议，主要用于客户端与外网服务器之间通讯的中间传递。`SOCKS`
- 是" `SOCKetS` "的缩写。
->
-> 当防火墙后的客户端要访问外部的服务器时，就跟 `SOCKS` 代理服务器连接。这个代理服务器控制客户端访问外网的资格，允许的话，就将客户端的请求发往外部的服务器。这个协议最初由 `David Koblas` 开发，而后由
- `NEC` 的 `Ying-Da Lee` 将其扩展到版本 `4` 。最新协议是版本 `5`，与前一版本相比，增加支持 `UDP`、`验证`，以及 `IPv6`。根据 `OSI` 模型，`SOCKS` 是会话层的协议，位于表示层与传输层之间。
 
-`SOCKS`工作在比`HTTP`代理更低的层次：`SOCKS`使用握手协议来通知代理软件其客户端试图进行的连接`SOCKS`，然后尽可能透明地进行操作，而常规代理可能会解释和重写报头（例如，使用另一种底层协议，例如`FTP`；然而，`HTTP`代理只是将`HTTP`请求转发到所需的`HTTP`服务器）。
 
-虽然`HTTP`代理有不同的使用模式，`CONNECT`方法允许转发`TCP`连接；然而，`SOCKS`代理还可以转发`UDP`流量和反向代理，而`HTTP`代理不能。
+这里多说依据sock5协议，sock5协议基于TCP协议上的一种，是通用的代理协议，我们在处理加密传输及其方便，我们还可以吧这个协议转成自己的私有协议。
+这是他的官方介绍
 
-`HTTP`代理通常更了解`HTTP`协议，执行更高层次的过滤（虽然通常只用于`GET`和`POST`方法，而不用于`CONNECT`方法）。
+https://tools.ietf.org/html/rfc1928
 
-***
 
-## 0x01 SOCKS建立连接
+2. 这份协议可以认真看一下，对协议规定的细节非常规范。
 
-`VPN` 就是一个正向代理，反向代理一般用作用户不可直接访问内网，但通过代理服务器访问内网资源的方式，代理服务器就是一个反向代理。
+其主要是通信双方的规则（最小单位是字节，比如VER 1 表示 1字节，但是值是可以更变的，这需要看详细的协议说明）
 
-反向代理，对于用户的感知几乎没有，正向代理却需要我们手动设置，比如常见的代理 `IP` 及端口
 
-客户端使用 `SOCKS5` 协议与代理服务器在建立连接，是如下步骤
+```
+一、客户端认证请求
+    +----+----------+----------+
+    |VER | NMETHODS | METHODS  |
+    +----+----------+----------+
+    | 1  |    1     |  1~255   |
+    +----+----------+----------+
+二、服务端回应认证
+    +----+--------+
+    |VER | METHOD |
+    +----+--------+
+    | 1  |   1    |
+    +----+--------+
+三、客户端连接请求(连接目的网络)
+    +----+-----+-------+------+----------+----------+
+    |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+    +----+-----+-------+------+----------+----------+
+    | 1  |  1  |   1   |  1   | Variable |    2     |
+    +----+-----+-------+------+----------+----------+
+四、服务端回应连接
+    +----+-----+-------+------+----------+----------+
+    |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
+    +----+-----+-------+------+----------+----------+
+    | 1  |  1  |   1   |  1   | Variable |    2     |
+    +----+-----+-------+------+----------+----------+
 
-``` shell
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    一、客户端认证请求
-        +----+----------+----------+
-        |VER | NMETHODS | METHODS  |
-        +----+----------+----------+
-        | 1  |    1     |  1~255   |
-        +----+----------+----------+
-    二、服务端回应认证
-        +----+--------+
-        |VER | METHOD |
-        +----+--------+
-        | 1  |   1    |
-        +----+--------+
-    三、客户端连接请求(连接目的网络)
-        +----+-----+-------+------+----------+----------+
-        |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
-        +----+-----+-------+------+----------+----------+
-        | 1  |  1  |   1   |  1   | Variable |    2     |
-        +----+-----+-------+------+----------+----------+
-    四、服务端回应连接
-        +----+-----+-------+------+----------+----------+
-        |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
-        +----+-----+-------+------+----------+----------+
-        | 1  |  1  |   1   |  1   | Variable |    2     |
-        +----+-----+-------+------+----------+----------+
-
-*数字代表字节数
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ```
 
-*符号含义，可以参考：[《HTTP协议和SOCKS5协议》](https://www.cnblogs.com/yinzhengjie/p/7357860.html) 一文
 
-在建立连接过程中，要确保每步都是正确完成的，如果错误就要抛出异常。
 
-***
+### python 语言实践一下
 
-## 0x02 代理服务端代码实现
 
-基于 `ThreadingTCPServer` 创建一个多线程服务，同时自己写一个 `DYProxy`的类，来实现SOCKS5的连接建立和数据传递。
 
-具体代码和步骤都写在注释里啦！
 
-``` python
-# -*- coding: utf-8 -*-
 
-import select
-import socket
-import struct
-from socketserver import StreamRequestHandler as Tcp, ThreadingTCPServer
-
-SOCKS_VERSION = 5                           # socks版本
-
-"""
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    一、客户端认证请求
-        +----+----------+----------+
-        |VER | NMETHODS | METHODS  |
-        +----+----------+----------+
-        | 1  |    1     |  1~255   |
-        +----+----------+----------+
-    二、服务端回应认证
-        +----+--------+
-        |VER | METHOD |
-        +----+--------+
-        | 1  |   1    |
-        +----+--------+
-    三、客户端连接请求(连接目的网络)
-        +----+-----+-------+------+----------+----------+
-        |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
-        +----+-----+-------+------+----------+----------+
-        | 1  |  1  |   1   |  1   | Variable |    2     |
-        +----+-----+-------+------+----------+----------+
-    四、服务端回应连接
-        +----+-----+-------+------+----------+----------+
-        |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
-        +----+-----+-------+------+----------+----------+
-        | 1  |  1  |   1   |  1   | Variable |    2     |
-        +----+-----+-------+------+----------+----------+
-
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-"""
-
-class DYProxy(Tcp):
+```
+class Proxy(Tcp):
     # 用户认证 用户名/密码
-    username = 'dyboy'
-    password = '123456'
+    username = 'username'
+    password = 'password'
 
     def handle(self):
-        print("客户端：", self.client_address, " 请求连接！")
         """
         一、客户端认证请求
             +----+----------+----------+
@@ -138,7 +81,7 @@ class DYProxy(Tcp):
         VER, NMETHODS = struct.unpack("!BB", header)
         # 设置socks5协议，METHODS字段的数目大于0
         assert VER == SOCKS_VERSION, 'SOCKS版本错误'
-
+        
         # 接受支持的方法
         # 无需认证：0x00    用户名密码认证：0x02
         # assert NMETHODS > 0
@@ -146,8 +89,8 @@ class DYProxy(Tcp):
         # 检查是否支持该方式，不支持则断开连接
         if 0 not in set(methods):
             self.server.close_request(self.request)
-
-
+            return
+        
         """
         二、服务端回应认证
             +----+--------+
@@ -158,11 +101,11 @@ class DYProxy(Tcp):
         """
         # 发送协商响应数据包 
         self.connection.sendall(struct.pack("!BB", SOCKS_VERSION, 0))
-
+        
         # 校验用户名和密码
         # if not self.VerifyAuth():
         #    return
-
+        
 
         """
         三、客户端连接请求(连接目的网络)
@@ -272,106 +215,282 @@ class DYProxy(Tcp):
 
 if __name__ == '__main__':
     # 服务器上创建一个TCP多线程服务，监听2019端口
-    Server = ThreadingTCPServer(('0.0.0.0', 2019), DYProxy)
-    print("**********************************************************")
-    print("************************* DYPROXY ************************")
-    print("*************************   1.0   ************************")
-    print("********************  IP:xxx.xxx.xxx.xxx  ******************")
-    print("***********************  PORT:2019  **********************")
-    print("**********************************************************")
+    Server = ThreadingTCPServer(('0.0.0.0', 2020), Proxy)
     Server.serve_forever();
-
 ```
 
-这个是服务端，基本不需要改动，这个直接在服务器上跑起来即可，缺什么就安装什么模块。
+我们先使用firefox 测试下，ok，通过的
 
-服务器会监听所有连接到服务器`IP`端口`2019`的`TCP`请求。
 
-这个文件并没有接入用户账号密码认证的，其中给注释了，因为认证方法不一样，涉及的其后返回数据包的方法参数不一样，所以写了两个，大家可以在文末 `Github` 地址参考。
+我们起个client端看下
+如果使用http转socks5协议呢？
 
-***
-
-### 0x03 如何使用
-
-一个简单的VPN在服务器上跑起来了，我们该怎么使用呐？
-
-由于需要客户端，一个简单使用 `socks` 代理的 `python` 客户端还是比较好测试的
-
-``` python
-# -*- coding: utf-8 -*-
-# author: DYBOY
-# time: 2019-5-18 17:27:49
-# desc: 测试使用socks5代理访问
-
-import socket
-import socks
+```
 import requests
 
-# 设置代理
-socks.set_default_proxy(socks.SOCKS5, "服务器IP", 2019)
-# 如果使用账号密码验证，那么使用下面这行连接方式
-# socks.set_default_proxy(socks.SOCKS5, "服务器IP", 2019,username='dyboy', password='123456')
-socket.socket = socks.socksocket
 
-# 测试访问 重庆大学
-test_url = 'http://cqu.edu.cn'
-html = requests.get(test_url,timeout=8)
-html.encoding = 'utf-8'
-print(html.text)
+url = "https://tools.ietf.org/html/rfc1928"
+res = requests.get(url, proxies={"http": "socks5://localhost:2020", "https": "socks5://localhost:2020"})
+print(res.status_code)
+
+# 200
 ```
 
-运行是可以直接访问，在命令行下输出 重庆大学 首页的 `HTML` 源码
+思考
+
+1. 如果这样的话我们就不能对client端的数据进行加密传输到server端了，那该怎么办呢？我们client端也起一个服务端口，监听一个端口，把监听的端口数据进行加密，然后转发的server端不就可以了吗？
 
 
-[![带登录口令的代理方式](https://upload-images.jianshu.io/upload_images/6661013-c624da32ff280b63.jpg "带登录口令的代理方式")](https://upload-images.jianshu.io/upload_images/6661013-c624da32ff280b63.jpg "带登录口令的代理方式")
 
-但这不应该是我们想要的，我们想看到花花绿绿的东西，对不对？
+client端监听
 
-***
-
-## 0x04 接入浏览器
-
-缺少客户端，`Python` 本身并没有什么可以将 `HTML` 源码渲染的模块，那么就可以借助浏览器。自己可以写一个本地客户端，转发浏览器的流量，似乎过于麻烦，又是一个代理。
-
-借助 火狐浏览器，自带可以设置 代理服务器的功能，即可实现我们的目的，所以没必要去写个客户端，站在巨人肩膀上浏览网页，哈哈~
-
-设置 基于 `SOCKS5` 的代理
+```
+import select
+import socket
+import struct
+from socketserver import StreamRequestHandler as Tcp, ThreadingTCPServer
 
 
-[![火狐浏览器代理设置socks5](https://upload-images.jianshu.io/upload_images/6661013-ba705263166f42de.png "火狐浏览器代理设置socks5")](https://upload-images.jianshu.io/upload_images/6661013-ba705263166f42de.png "火狐浏览器代理设置socks5")
-
-开始使用前，服务端的 `server.py` 得先运！（不运行，客户端怎么访问？？？）
-
-设置完成即可以代理服务器的身份浏览网页
-
-测试访问重庆大学（`cqu.edu.cn`）
-
-[![访问重庆大学官网](https://upload-images.jianshu.io/upload_images/6661013-8bdd863b97e1478b.png "访问重庆大学官网")](https://upload-images.jianshu.io/upload_images/6661013-8bdd863b97e1478b.png "访问重庆大学官网")
-
-百度看看，咱的IP是不是代理服务器的IP呐？
+class Proxy(Tcp):
 
 
-[![查看IP情况](https://upload-images.jianshu.io/upload_images/6661013-a65fde36591c0572.png "查看IP情况")](https://upload-images.jianshu.io/upload_images/6661013-a65fde36591c0572.png "查看IP情况")
+
+    def handle(self):
+
+        self.address = "0.0.0.0"
+        self.port = 2020
+
+        self.remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.remote.connect((self.address, self.port))
 
 
-OK，大功告成！回家吃饭？
+        bind_address = self.remote.getsockname()
 
-似乎...
+        self.ExchangeData(self.connection, self.remote)
 
-***
+    def ExchangeData(self, client, remote):
+        """
+        交换数据
+        """
+        while True:
+            # 等待数据
+            rs, ws, es = select.select([client, remote], [], [])
+            if client in rs:
+                data = client.recv(4096)
+                if remote.send(data) <= 0:
+                    break
+            if remote in rs:
+                data = remote.recv(4096)
+                if client.send(data) <= 0:
+                    break
 
-## 0x05 一些思考
+if __name__ == '__main__':
+    # 服务器上创建一个TCP多线程服务，监听2019端口
+    Server = ThreadingTCPServer(('0.0.0.0', 2019), Proxy)
+    Server.serve_forever();
+```
 
-虽然小东写的比较简单，其背后还是需要去了解各个模块的使用，当然最主要还是要知道 `SOCKS5` 协议连接过程，以及各参数的大致含义。其中留了一些坑，在口令校验中，浏览器不会自动帮我们输入账号密码，所以需要一个插件`autoproxy`，这个插件内提前设置好，账号密码即可，这样安全性似乎提高了一些。
 
-在比较 `ShadowSocks` 这个软件中，我们发现还有一些加密的方式，进一步提高了安全性，这都是需要改进的，小东负责挖坑，代码上传 `Github`。各位路过的大佬，不妨填一填坑？
+这里我们只是单纯在TCP传输中将数据转发。注意这里借用了==firefox==  端以及实现的 SOCKS5。我只是单纯转发。
+为什么要这样呢。因为这样方便对数据直接在client端加密解密，也方便在server端加密解密。如果加上现在常见的加密方式会怎么样。我们实践一下
 
 
-[![走开啦，死基佬](https://upload-images.jianshu.io/upload_images/6661013-6da58443ead7506f.gif "走开啦，死基佬")](https://upload-images.jianshu.io/upload_images/6661013-6da58443ead7506f.gif "走开啦，死基佬")
+我们先了解一下常见的加密方式
 
-最后，欢迎各位大佬、爱学习的同学关注 小东博客
+```
+MD5         # 通用加密！可以防篡改，理论不可逆，但可以撞彩虹表
+DES         # 这个可以暴力破解
+3DES        # 升级版DES,可以防止暴力破解
+AES         # 对称加密，很多js接口都喜欢用这个小防一下爬虫
+SHA         # 很多js接口都喜欢用这个，在数据库存储密码时也和喜欢salt + SHA2做处理
+RSA         # 非对称加密，支付宝支付就这个加密
+```
 
-> 博客：https://blog.dyboy.cn
->
-> Github代码托放：https://github.com/dyboy2017/DYPROXY （欢迎 `star`）
+
+加密方式还是非常多的，但是我们只是想单纯混淆下，不必使得算法的时间复杂度那么高，造成CPU去算很多次。
+
+我们可以这样，socket传输的最低单位是字节
+
+1 byte = 8 bit = 00000000-11111111
+
+那么1byte表示的最大值就是255，最小值就是0。
+那么这就好办了，取一个256字节的密码。里面包括了0-255这些数字（不重复）。然后使用数组将他们排列，这个时候就有了索引。且传输的时候对单独每个字节加密，到地方的时候解密。对每一个字节进行加密。
+
+我们这个时候算下对单个字节加密的时间复杂度是为O(1)。而组合的结果可以有255*254*253*···=255！种。
+
+
+那我们的步骤就是
+1. 设计一个256字节的密码，包含0-255，且不重复
+2. 将密码base64 编码一些。一个是:方便存储，二是:通过base64 在数组与base64编码之间转换
+3. 设计一个解码器编辑器，将设计的密码可以很方便的转换为 加密密码器和解密密码器
+4. 设计一个传输通道 将我们设计的解码编辑器弄过来，将传输通道中的每个字节加密或解密，然后传输
+
+
+分成4步走之后我们实际代码实现一下
+
+1. 设计一个256字节的密码，包含0-255，且不重复
+
+
+```
+import random
+PASSWORD_LENGTH = 256
+IDENTITY_PASSWORD = bytearray(range(256))
+
+
+
+# random
+def randomPassword():
+	password = IDENTITY_PASSWORD.copy()
+	random.shuffle(password)
+	return password
+```
+
+
+2. 将密码base64 编码 - 解密
+
+
+```
+import base64
+# 定义数组长度 256
+# len = length
+def validatePassword(password):
+	return len(password) == PASSWORD_LENGTH and len(set(password)) == PASSWORD_LENGTH
+
+
+# load
+def loadsPassword(passwordString):
+	try:
+		password = base64.urlsafe_b64decode(passwordString.encode('utf8', errors='strict'))
+		password = bytearray(password)
+	except:
+		raise InvalidPasswordError
+
+	if not validatePassword(password):
+		raise InvalidPasswordError
+
+	return password
+
+
+# dump
+def dumpsPassword(password):
+	if not validatePassword(password):
+		raise InvalidPasswordError
+
+	return base64.urlsafe_b64encode(password).decode('utf8', errors='strict')
+```
+
+
+3. 设计一个解码编辑器
+
+
+```
+import copy
+
+
+class Cipher():
+    def __init__(self, encodePassword, decodePassword):
+        # 编码用的密码
+        self.encodePassword = encodePassword
+        # 解码用的密码
+        self.decodePassword = decodePassword
+
+    # 解码加密后的数据到原数据
+    def encode(self, bs):
+        for i,v in enumerate(bs):
+            bs[i] = self.encodePassword[v]
+
+
+
+    # 解密加密后的数据到原数据
+    def decode(self, bs):
+        for i,v in enumerate(bs):
+            bs[i] = self.decodePassword[v]
+
+
+    # 新建一个解密编辑器
+    @classmethod
+    def NewCipher(cls,encodePassword):
+        decodePassword = copy.copy(encodePassword)
+
+        for i,v in enumerate(encodePassword):
+            decodePassword[v] = i
+
+        return cls(encodePassword, decodePassword)
+```
+
+4. 设计一个传输管道
+
+
+```
+password = "base64 成的密码"
+
+
+class SecureSocket():
+
+
+    def __init__(self):
+        self.cipher = self._Cipher()
+
+    def _Cipher(self):
+        bytepassword = loadsPassword(password)
+        cipher = Cipher.NewCipher(bytepassword)
+        return cipher
+
+    def decodeRead(self, bs):
+        bs = bytearray(bs)
+        self.cipher.decode(bs)
+
+        return bs
+
+
+    def encodeWrite(self, bs):
+        bs = bytearray(bs)
+        self.cipher.encode(bs)
+        return bs
+```
+
+
+
+我们测试下。ok通过
+
+
+
+### go语言实现版本
+我们依照上面的步骤，实现一下，ok。通过
+
+1. 这里注意下如果需要使用go 的io.copy方法的话，他其实内部是有一个for 循环，对大的数据比如传输还是非常有帮助的。
+2. go的协程还是非常nice的
+3. 交叉编译效果也还好！
+
+
+
+思考：
+1. 我们能否对传输继续加密呢。
+
+是可以的。可以用多种加密对已经加密的数据继续加密，这样相对来说更安全一点
+
+2. 我们能否对已实现的传输进行攻击？
+
+这块就不研究了
+
+3. 可以做什么
+
+千人千面
+
+
+
+### 实验总结
+1. 实验过程中犯了好几次错误是不该犯的，就是写错了加密的一些标识！
+2. socket 编程不好调试。很多时候打断点会出现奇怪的问题，尤其是Goland不知道为什么没有断点调试板
+3. 感谢JetBrains提供的Golang、Pycharm 这么优秀的IDE
+4. python 现在向后面标准写法看齐，使用typing模块去定义传递类型和返回类型
+5. 下一节我们主题是如何使用异步造一个websocket框架进行直播流的解析
+
+参考资料：
+
+https://jiajunhuang.com/articles/2019_06_06-socks5.md.html
+
+https://tools.ietf.org/html/rfc1928
+
+
 

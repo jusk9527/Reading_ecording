@@ -38,13 +38,15 @@ SOCKS_VERSION = 5                           # socks版本
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 """
 
-class DYProxy(Tcp):
-    # 用户认证 用户名/密码
-    username = 'dyboy'
-    password = '123456'
+
+
+from DYPROXY.module.securesocket import SecureSocket
+
+class Proxy(Tcp):
 
     def handle(self):
-        print("客户端：", self.client_address, " 请求连接！")
+        self.securesocket = SecureSocket()
+
         """
         一、客户端认证请求
             +----+----------+----------+
@@ -54,19 +56,17 @@ class DYProxy(Tcp):
             +----+----------+----------+
         """
         # 从客户端读取并解包两个字节的数据
-        header = self.connection.recv(2)
-        VER, NMETHODS = struct.unpack("!BB", header)
+
+        header = self.connection.recv(3)
+
+
+
+        header = self.securesocket.decodeRead(header)
+        # 这里是解包
+        VER, NMETHODS, _ = struct.unpack("!BBB", header)
         # 设置socks5协议，METHODS字段的数目大于0
         assert VER == SOCKS_VERSION, 'SOCKS版本错误'
-        
-        # 接受支持的方法
-        # 无需认证：0x00    用户名密码认证：0x02
-        # assert NMETHODS > 0
-        methods = self.IsAvailable(NMETHODS)
-        # 检查是否支持该方式，不支持则断开连接
-        if 0 not in set(methods):
-            self.server.close_request(self.request)
-            return
+
         
         """
         二、服务端回应认证
@@ -76,13 +76,14 @@ class DYProxy(Tcp):
             | 1  |   1    |
             +----+--------+
         """
-        # 发送协商响应数据包 
-        self.connection.sendall(struct.pack("!BB", SOCKS_VERSION, 0))
-        
-        # 校验用户名和密码
-        # if not self.VerifyAuth():
-        #    return
-        
+        # 发送协商响应数据包
+
+        # 发送协商响应数据包，不需要验证，直接通过
+        reply = self.securesocket.encodeWrite([SOCKS_VERSION,0])
+
+        self.connection.sendall(struct.pack("!BB", reply[0], reply[1]))
+
+
 
         """
         三、客户端连接请求(连接目的网络)
@@ -92,15 +93,35 @@ class DYProxy(Tcp):
             | 1  |  1  |   1   |  1   | Variable |    2     |
             +----+-----+-------+------+----------+----------+
         """
-        version, cmd, _, address_type = struct.unpack("!BBBB", self.connection.recv(4))
+
+
+        res = self.connection.recv(4)
+
+        deres = self.securesocket.decodeRead(res)
+
+
+        version, cmd, _, address_type = struct.unpack("!BBBB", deres)
+
+
+
         assert version == SOCKS_VERSION, 'socks版本错误'
         if address_type == 1:       # IPv4
             # 转换IPV4地址字符串（xxx.xxx.xxx.xxx）成为32位打包的二进制格式（长度为4个字节的二进制字符串）
-            address = socket.inet_ntoa(self.connection.recv(4))
+
+            _address = self.connection.recv(4)
+            _address = self.securesocket.decodeRead(_address)
+            address = socket.inet_ntoa(_address)
         elif address_type == 3:     # Domain
-            domain_length = ord(self.connection.recv(1)[0])
+
+            _domain_length = self.connection.recv(1)
+            _domain_length = self.securesocket.decodeRead(_domain_length)[0]
+            domain_length = ord(_domain_length)
             address = self.connection.recv(domain_length)
-        port = struct.unpack('!H', self.connection.recv(2))[0]
+
+        _port = self.connection.recv(2)
+        _port = self.securesocket.decodeRead(_port)
+        port = struct.unpack('!H', _port)[0]
+
 
         """
         四、服务端回应连接
@@ -126,7 +147,15 @@ class DYProxy(Tcp):
             print(err)
             # 响应拒绝连接的错误
             reply = self.ReplyFaild(address_type, 5)
+
+
+        reply = self.securesocket.encodeWrite(reply)
         self.connection.sendall(reply)      # 发送回复包
+
+
+        reply = self.securesocket.decodeRead(reply)
+
+
 
         # 建立连接成功，开始交换数据
         if reply[1] == 0 and cmd == 1:
@@ -134,36 +163,7 @@ class DYProxy(Tcp):
         self.server.close_request(self.request)
 
 
-    def IsAvailable(self, n):
-        """ 
-        检查是否支持该验证方式 
-        """
-        methods = []
-        for i in range(n):
-            methods.append(ord(self.connection.recv(1)))
-        return methods
 
-
-    def VerifyAuth(self):
-        """
-        校验用户名和密码
-        """
-        version = ord(self.connection.recv(1))
-        assert version == 1
-        username_len = ord(self.connection.recv(1))
-        username = self.connection.recv(username_len).decode('utf-8')
-        password_len = ord(self.connection.recv(1))
-        password = self.connection.recv(password_len).decode('utf-8')
-        if username == self.username and password == self.password:
-            # 验证成功, status = 0
-            response = struct.pack("!BB", version, 0)
-            self.connection.sendall(response)
-            return True
-        # 验证失败, status != 0
-        response = struct.pack("!BB", version, 0xFF)
-        self.connection.sendall(response)
-        self.server.close_request(self.request)
-        return False
 
 
     def ReplyFaild(self, address_type, error_number):
@@ -177,26 +177,34 @@ class DYProxy(Tcp):
         """ 
         交换数据 
         """
+
+
         while True:
             # 等待数据
             rs, ws, es = select.select([client, remote], [], [])
             if client in rs:
                 data = client.recv(4096)
-                if remote.send(data) <= 0:
+
+                # 解密
+                _data = self.securesocket.decodeRead(data)
+                if remote.send(_data) <= 0:
                     break
             if remote in rs:
                 data = remote.recv(4096)
-                if client.send(data) <= 0:
+                # 加密
+                _data = self.securesocket.encodeWrite(data)
+
+                if client.send(_data) <= 0:
                     break
 
 
 if __name__ == '__main__':
     # 服务器上创建一个TCP多线程服务，监听2019端口
-    Server = ThreadingTCPServer(('0.0.0.0', 2019), DYProxy)
+    Server = ThreadingTCPServer(('0.0.0.0', 2020), Proxy)
     print("**********************************************************")
     print("************************* DYPROXY ************************")
     print("*************************   1.0   ************************")
     print("********************  IP:xxx.xxx.xx.xx  ******************")
-    print("***********************  PORT:2019  **********************")
+    print("***********************  PORT:2020  **********************")
     print("**********************************************************")
-    Server.serve_forever();
+    Server.serve_forever()
