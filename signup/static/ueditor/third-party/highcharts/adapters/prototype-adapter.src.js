@@ -266,7 +266,7 @@ return {
 		return arr.map(fn);
 	},
 
-	// extend an object to handle highchart events (highchart objects, not svg elements).
+	// extend an object to handle highchart events (highchart objects, not 06_svg elements).
 	// this is a very simple way of handling events but whatever, it works (i think)
 	_extend: function (object) {
 		if (!object._highcharts_extended) {

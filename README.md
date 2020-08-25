@@ -17,5 +17,6 @@
 [simple_wsgi](./simple_wsgi)|wsgi的结构
 [TestCase_demo](./TestCase_demo)|Django 的一些冷技巧，非常实用
 [websocket](./websocket)|Django websocket与celery的结合
+[Verification_Code](Verification)|验证码
 
 

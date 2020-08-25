@@ -1203,7 +1203,7 @@ var pJS = function(tag_id, params){
 
   pJS.fn.vendors.createSvgImg = function(p){
 
-    /* set color to svg element */
+    /* set color to 06_svg element */
     var svgXml = pJS.tmp.source_svg,
         rgbHex = /#([0-9A-F]{3,6})/gi,
         coloredSvgXml = svgXml.replace(rgbHex, function (m, r, g, b) {
@@ -1215,8 +1215,8 @@ var pJS = function(tag_id, params){
           return color_value;
         });
 
-    /* prepare to create img with colored svg */
-    var svg = new Blob([coloredSvgXml], {type: 'image/svg+xml;charset=utf-8'}),
+    /* prepare to create img with colored 06_svg */
+    var svg = new Blob([coloredSvgXml], {type: 'image/06_svg+xml;charset=utf-8'}),
         DOMURL = window.URL || window.webkitURL || window,
         url = DOMURL.createObjectURL(svg);
 

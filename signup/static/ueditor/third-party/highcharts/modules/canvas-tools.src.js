@@ -315,9 +315,9 @@ if(!Array.prototype.indexOf){
 
 (function(){
 	// canvg(target, s)
-	// empty parameters: replace all 'svg' elements on page with 'canvas' elements
+	// empty parameters: replace all '06_svg' elements on page with 'canvas' elements
 	// target: canvas element or the id of a canvas element
-	// s: svg string, url to svg file, or xml document
+	// s: 06_svg string, url to 06_svg file, or xml document
 	// opts: optional hash of options
 	//		 ignoreMouse: true => ignore mouse events
 	//		 ignoreAnimation: true => ignore animations
@@ -1150,7 +1150,7 @@ if(!Array.prototype.indexOf){
 		}
 		svg.Element.PathElementBase.prototype = new svg.Element.RenderedElementBase;
 		
-		// svg element
+		// 06_svg element
 		svg.Element.svg = function(node) {
 			this.base = svg.Element.RenderedElementBase;
 			this.base(node);
@@ -1704,7 +1704,7 @@ if(!Array.prototype.indexOf){
 			this.base(node);
 			
 			this.createPattern = function(ctx, element) {
-				// render me using a temporary svg element
+				// render me using a temporary 06_svg element
 				var tempSvg = new svg.Element.svg();
 				tempSvg.attributes['viewBox'] = new svg.Property('viewBox', this.attribute('viewBox').value);
 				tempSvg.attributes['x'] = new svg.Property('x', this.attribute('x').value);
@@ -1734,7 +1734,7 @@ if(!Array.prototype.indexOf){
 				if (this.attribute('markerUnits').valueOrDefault('strokeWidth') == 'strokeWidth') ctx.scale(ctx.lineWidth, ctx.lineWidth);
 				ctx.save();
 							
-				// render me using a temporary svg element
+				// render me using a temporary 06_svg element
 				var tempSvg = new svg.Element.svg();
 				tempSvg.attributes['viewBox'] = new svg.Property('viewBox', this.attribute('viewBox').value);
 				tempSvg.attributes['refX'] = new svg.Property('refX', this.attribute('refX').value);
@@ -2438,7 +2438,7 @@ if(!Array.prototype.indexOf){
 								var fontFamily = props['font-family'].value.replace(/"/g,'');
 								var srcs = props['src'].value.split(',');
 								for (var s=0; s<srcs.length; s++) {
-									if (srcs[s].indexOf('format("svg")') > 0) {
+									if (srcs[s].indexOf('format("06_svg")') > 0) {
 										var urlStart = srcs[s].indexOf('url');
 										var urlEnd = srcs[s].indexOf(')', urlStart);
 										var url = srcs[s].substr(urlStart + 5, urlEnd - urlStart - 6);
@@ -2495,7 +2495,7 @@ if(!Array.prototype.indexOf){
 			this.base(node);
 						
 			this.apply = function(ctx, element) {
-				// render as temp svg	
+				// render as temp 06_svg	
 				var x = this.attribute('x').Length.toPixels('x');
 				var y = this.attribute('y').Length.toPixels('y');
 				var width = this.attribute('width').Length.toPixels('x');
@@ -2559,7 +2559,7 @@ if(!Array.prototype.indexOf){
 			this.base(node);
 						
 			this.apply = function(ctx, element) {
-				// render as temp svg	
+				// render as temp 06_svg	
 				var bb = element.getBoundingBox();
 				var x = this.attribute('x').Length.toPixels('x');
 				var y = this.attribute('y').Length.toPixels('y');
@@ -2974,7 +2974,7 @@ if (CanvasRenderingContext2D) {
 			this.ttDiv = createElement(DIV, null, initialHiddenStyle, containerParent);
 			this.ttTimer = UNDEFINED;
 
-			// Move away the svg node to a new div inside the container's parent so we can hide it.
+			// Move away the 06_svg node to a new div inside the container's parent so we can hide it.
 			var hiddenSvg = createElement(DIV, {
 				width: containerOffsetWidth,
 				height: containerOffsetHeight

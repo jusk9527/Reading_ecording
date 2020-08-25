@@ -4904,7 +4904,7 @@ vjs.MediaTechController = vjs.Component.extend({
  * inactive)
  *
  * A tap can signal that a user has become active, or has become inactive
- * e.g. a quick tap on an iPhone movie should reveal the controls. Another
+ * e.g. a quick tap on an iPhone 01_movie should reveal the controls. Another
  * quick tap should hide them again (signaling the user is in an inactive
  * viewing state)
  *

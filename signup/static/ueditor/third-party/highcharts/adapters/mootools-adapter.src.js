@@ -133,7 +133,7 @@ win.HighchartsAdapter = {
 			}, options)
 		);
 
-		// Make sure that the element reference is set when animating svg elements
+		// Make sure that the element reference is set when animating 06_svg elements
 		if (isSVGElement) {
 			effect.element = el;
 		}

@@ -6465,7 +6465,7 @@
                 }
     
                 html += 'width="100%" height="100%" style="outline:0">'  +
-                    '<param name="movie" value="' + opts.swf + '" />' +
+                    '<param name="01_movie" value="' + opts.swf + '" />' +
                     '<param name="flashvars" value="uid=' + this.uid +
                     '&jsreciver=' + this.jsreciver + '" />' +
                     '<param name="wmode" value="transparent" />' +

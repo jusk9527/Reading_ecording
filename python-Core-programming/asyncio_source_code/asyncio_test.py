@@ -1,10 +1,16 @@
 import asyncio
+import types
 
-async def compute(x, y):
-    print("Compute %s + %s ..." % (x, y))
-    await asyncio.sleep(1.0)
-    return x + y
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(compute(1, 2))
-loop.close()
+@asyncio.coroutine
+def f():
+    yield from asyncio.sleep(3)
+
+
+@types.coroutine
+def g():
+    yield from asyncio.sleep(3)
+
+
+async def h():
+    await asyncio.sleep(3)

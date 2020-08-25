@@ -15,15 +15,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from Test import views
-from TestSyncio.views import TestAsyncioView
+# from apps.Test import views
+from apps.TestSyncio.views import TestAsyncioView
+from apps.Test_djagno_apscheduler.views import test_add_task
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
-    path('hello_test_case', views.HelloTestCase.as_view(), name='hello_test_case'),
-    path('hello_test_case2', views.HomeWorkViewSet.as_view({'get': 'list'}), name='home_works_list'),
+    # path('hello_test_case', views.HelloTestCase.as_view(), name='hello_test_case'),
+    # path('hello_test_case2', views.HomeWorkViewSet.as_view({'get': 'list'}), name='home_works_list'),
 
     # 异步写法
-    path('testasyncioview/', TestAsyncioView.as_view(), name="testasyncioview")
+    path('testasyncioview/', TestAsyncioView.as_view(), name="testasyncioview"),
+
+    # 任务、定时、配置
+    path('testapscheduler/',test_add_task, name="testapscheduler")
 
 ]
+
+
+import apps.Test_djagno_apscheduler.views

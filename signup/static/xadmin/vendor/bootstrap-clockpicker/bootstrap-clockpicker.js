@@ -10,12 +10,12 @@
 		$doc = $(document),
 		$body;
 
-	// Can I use inline svg ?
-	var svgNS = 'http://www.w3.org/2000/svg',
+	// Can I use inline 06_svg ?
+	var svgNS = 'http://www.w3.org/2000/06_svg',
 		svgSupported = 'SVGAngle' in window && (function(){
 			var supported,
 				el = document.createElement('div');
-			el.innerHTML = '<svg/>';
+			el.innerHTML = '<06_svg/>';
 			supported = (el.firstChild && el.firstChild.namespaceURI) == svgNS;
 			el.innerHTML = '';
 			return supported;
@@ -318,7 +318,7 @@
 			// Draw clock hands and others
 			var canvas = popover.find('.clockpicker-canvas'),
 				svg = createSvgElement('svg');
-			svg.setAttribute('class', 'clockpicker-svg');
+			svg.setAttribute('class', 'clockpicker-06_svg');
 			svg.setAttribute('width', diameter);
 			svg.setAttribute('height', diameter);
 			var g = createSvgElement('g');
@@ -638,7 +638,7 @@
 		this[this.currentView] = value;
 		this[isHours ? 'spanHours' : 'spanMinutes'].html(leadingZero(value));
 
-		// If svg is not supported, just add an active class to the tick
+		// If 06_svg is not supported, just add an active class to the tick
 		if (! svgSupported) {
 			this[isHours ? 'hoursView' : 'minutesView'].find('.clockpicker-tick').each(function(){
 				var tick = $(this);

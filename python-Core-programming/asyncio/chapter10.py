@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 def main():
     start = time.time()
-    url = "https://movie.douban.com/cinema/later/beijing/"
+    url = "https://01_movie.douban.com/cinema/later/beijing/"
     init_page = requests.get(url).content
     init_soup = BeautifulSoup(init_page, 'lxml')
     all_movies = init_soup.find('div', id="showing-soon")

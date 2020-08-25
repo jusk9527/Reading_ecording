@@ -135,7 +135,7 @@ defaultOptions.exporting = {
 				textKey: 'downloadSVG',
 				onclick: function () {
 					this.exportChart({
-						type: 'image/svg+xml'
+						type: 'image/06_svg+xml'
 					});
 				}
 			}
@@ -145,11 +145,11 @@ defaultOptions.exporting = {
 
 				text: 'View SVG',
 				onclick: function () {
-					var svg = this.getSVG()
+					var 06_svg = this.getSVG()
 						.replace(/</g, '\n&lt;')
 						.replace(/>/g, '&gt;');
 
-					doc.body.innerHTML = '<pre>' + svg + '</pre>';
+					doc.body.innerHTML = '<pre>' + 06_svg + '</pre>';
 				}
 			} // */
 			]
@@ -291,10 +291,10 @@ extend(Chart.prototype, {
 			.replace(/symbolName="[^"]+"/g, '')
 			.replace(/jQuery[0-9]+="[^"]+"/g, '')
 			.replace(/url\([^#]+#/g, 'url(#')
-			.replace(/<svg /, '<svg xmlns:xlink="http://www.w3.org/1999/xlink" ')
+			.replace(/<svg /, '<06_svg xmlns:xlink="http://www.w3.org/1999/xlink" ')
 			.replace(/ href=/g, ' xlink:href=')
 			.replace(/\n/, ' ')
-			.replace(/<\/svg>.*?$/, '</svg>') // any HTML added to the container after the SVG (#894)
+			.replace(/<\/svg>.*?$/, '</06_svg>') // any HTML added to the container after the SVG (#894)
 			/* This fails in IE < 8
 			.replace(/([0-9]+)\.([0-9]+)/g, function(s1, s2, s3) { // round off to save weight
 				return s2 +'.'+ s3[0];
@@ -649,7 +649,7 @@ extend(Chart.prototype, {
 		for (i = 0; i < chart.exportSVGElements.length; i++) {
 			elem = chart.exportSVGElements[i];
 			
-			// Destroy and null the svg/vml elements
+			// Destroy and null the 06_svg/vml elements
 			if (elem) { // #1822
 				elem.onclick = elem.ontouchstart = null;
 				chart.exportSVGElements[i] = elem.destroy();

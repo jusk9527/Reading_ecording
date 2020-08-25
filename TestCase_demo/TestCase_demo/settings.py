@@ -25,7 +25,7 @@ SECRET_KEY = '2$h2b-(#d1iqk%%qasr4rm32&=(nm@8&57-(mxg!$mbba_@c5-'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -38,10 +38,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'Test',
+    # 'apps.Test',
+    "apps.Test_djagno_apscheduler",
+    "django_apscheduler",
+    'corsheaders'
+
+
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -121,3 +127,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+APSCHEDULER_DATETIME_FORMAT =  "N j, Y, f:s a"  # Default

@@ -44,6 +44,7 @@ class  MyArray():
         for item in self:
             print(item)
 
+
 array = MyArray(10)
 # array[1] = 3
 # print(array[0])

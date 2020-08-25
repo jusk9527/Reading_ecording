@@ -11,7 +11,7 @@ header = {
     'Cache-Control':' max-age=0',
     'Connection':' keep-alive',
     'Cookie':' bid=6g5nTcmo4u0; douban-fav-remind=1; __utmz=30149280.1572568141.2.2.utmcsr=baidu|utmccn=(organic)|utmcmd=organic; __utma=30149280.770658902.1568870221.1572568141.1573023022.3; __utmb=30149280.0.10.1573023022; __utmc=30149280; __utma=223695111.1482886726.1573023022.1573023022.1573023022.1; __utmb=223695111.0.10.1573023022; __utmc=223695111; __utmz=223695111.1573023022.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); _pk_id.100001.4cf6=3a686c23ce0426a2.1573023022.1.1573023022.1573023022.; _pk_ses.100001.4cf6=*; ap_v=0,6.0',
-    'Host':' movie.douban.com',
+    'Host':' 01_movie.douban.com',
     'Upgrade-Insecure-Requests':' 1',
     'User-Agent':' Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
 }
@@ -24,7 +24,7 @@ async  def fetch_content(url):
                 return await response.text()
 
 async def main():
-    url = "https://movie.douban.com/cinema/later/beijing/"
+    url = "https://01_movie.douban.com/cinema/later/beijing/"
     init_page = await fetch_content(url)
     init_soup = BeautifulSoup(init_page, 'lxml')
     movie_names, urls_to_fetch, movie_dates = [], [], []

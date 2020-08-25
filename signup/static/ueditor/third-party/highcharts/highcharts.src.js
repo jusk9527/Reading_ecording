@@ -38,7 +38,7 @@ var UNDEFINED,
 	isWebKit = /AppleWebKit/.test(userAgent),
 	isFirefox = /Firefox/.test(userAgent),
 	isTouchDevice = /(Mobile|Android|Windows Phone)/.test(userAgent),
-	SVG_NS = 'http://www.w3.org/2000/svg',
+	SVG_NS = 'http://www.w3.org/2000/06_svg',
 	hasSVG = !!doc.createElementNS && !!doc.createElementNS(SVG_NS, 'svg').createSVGRect,
 	hasBidiBug = isFirefox && parseInt(userAgent.split('Firefox/')[1], 10) < 4, // issue #38
 	useCanVG = !hasSVG && !isIE && !!doc.createElement('canvas').getContext,
@@ -3690,7 +3690,7 @@ SVGRenderer.prototype = {
 		} else {
 			// could be exporting in IE
 			// using href throws "not supported" in ie7 and under, requries regex shim to fix later
-			elemWrapper.element.setAttribute('hc-svg-href', src);
+			elemWrapper.element.setAttribute('hc-06_svg-href', src);
 	}
 
 		return elemWrapper;
