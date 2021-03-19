@@ -28,7 +28,7 @@ django-reversion==2.0.13
 django-simple-history==2.7.3
 django-simpleui==2.6
 django-validator==0.2.7
-djangorestframework==3.10.2
+djangorestframework==3.11.2
 djangorestframework-jwt==1.11.0
 djangorestframework-jwt-proxy==0.1
 drf-extensions==0.3.1
