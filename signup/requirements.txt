@@ -84,7 +84,7 @@ swagger-spec-validator==2.4.3
 tablib==0.12.1
 unicodecsv==0.14.1
 uritemplate==3.0.0
-urllib3==1.22
+urllib3==1.26.5
 wcwidth==0.1.7
 wechatpy==1.8.3
 xlrd==1.1.0
